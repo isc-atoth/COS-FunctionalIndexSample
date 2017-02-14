@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2.1 (Build 803U)" ts="2017-02-14 09:58:17">
+<Project name="FullTextSearchUI" LastModified="2017-02-14 09:57:30.126048">
+  <Items>
+    <ProjectItem name="csp/user/css/search.css" type="CSP"></ProjectItem>
+    <ProjectItem name="csp/user/js/controllers/search.js" type="CSP"></ProjectItem>
+    <ProjectItem name="csp/user/js/factories/search.js" type="CSP"></ProjectItem>
+    <ProjectItem name="csp/user/fullTextSearch.csp" type="CSP"></ProjectItem>
+  </Items>
+</Project>
+
+
+<CSP name="css/search.css" application="/csp/user/" default="1"><![CDATA[
+div.time-ellapsed {
+	position: fixed;
+	top: 10em;
+	right: 5em;
+	width: 30em;
+	height: 30em;
+	overflow-y: auto;
+	z-index: 100;
+}
+
+div.time-record {
+	animation-name: timenew;
+	animation-duration: 5s;
+	font-size: 125%;
+}
+
+label.label-lg: {
+	font-size: 1.5em;
+}
+
+.page-content {
+	margin-top: 1.5em;	
+}
+
+.company-name {
+	font-weight: bold;
+	font-size: 1.5em;
+	color: blue;
+	
+	margin-top: 0.8em;
+}
+
+.company-descr {
+	font-size: 1.0em;
+}
+
+@keyframes timenew {
+	0%		{ color: red; }
+	25%		{ color: hotpink; }
+	50%		{ color: pink; }
+	75%		{ color: lightpink; }
+	100%	{ color: black; }
+}
+]]></CSP>
+
+
+<CSP name="fullTextSearch.csp" application="/csp/user/" default="1"><![CDATA[
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Fulltext Search</title>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<!-- My Files -->
+<script type="text/javascript">
+	var app = angular.module('FullTextSearch', [ ]);
+	var restUrl = '#(##class(fulltext.search.REST).#LOCATION)#';
+</script>
+<link rel="stylesheet" type="text/css" href="css/search.css" />
+<script src="js/factories/search.js"></script>
+<script src="js/controllers/search.js"></script>
+
+</head>
+<body ng-app="FullTextSearch">
+
+	<!-- Page content start -->
+	<div class="page-content" ng-controller="FullTextSearchController as ctrl">
+		<div class="time-ellapsed">
+			<div ng-repeat="exec in ctrl.ellapsedTimes | limitTo: 10 " class="time-record" >
+				<span style="font-weight: bold;">Server:</span>&nbsp;{{exec.server}}&nbsp;ms&nbsp;-&nbsp;
+				<span style="font-weight: bold;">Client:</span>&nbsp;{{exec.client}}&nbsp;ms
+			</div>
+		</div>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-2"></div>
+				<div class="col-md-8">
+    				<form>
+    					<div class="form-group row">
+							<label for="searchTerm" class="col-sm-1" style="font-size: 1.5em;">Search:</label>
+							<div class="col-sm-11">
+								<input type="text" id="searchTerm" class="form-control input-lg" width="90%" ng-model="ctrl.searchTerm"
+									ng-keyup="ctrl.search()"
+								/>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-1"></div>
+				<div class="col-md-10">
+					<div ng-repeat="rec in ctrl.results | orderBy: 'company'">
+						<div class="company-name">{{::rec.company}}</div>
+						<div class="company-descr">{{::rec.description}}</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Content end -->
+
+</body>
+</html>
+]]></CSP>
+
+
+<CSP name="js/controllers/search.js" application="/csp/user/" default="1"><![CDATA[
+/**
+ * 
+ */
+(function() {
+	angular.module('FullTextSearch').controller('FullTextSearchController', [ 'FullTextSearchREST', function(FullTextSearchREST) {
+		var ctrl = this;
+		ctrl.searchTerm = '';
+		ctrl.results = [];
+		ctrl.ellapsedTimes = [];
+		
+		ctrl.search = function() {
+			if (ctrl.searchTerm.length < 3) {
+				ctrl.results = [];
+				return;
+			}
+			
+			var t1 = performance.now();
+			FullTextSearchREST.search(
+				ctrl.searchTerm,
+				// success handler
+				function(result) {
+					if (typeof result === 'object') {
+						var t2 = performance.now();
+						ctrl.ellapsedTimes.unshift({ server: result.data.ellapsedTime, client: Math.round(t2 - t1) });
+						ctrl.results = result.data.results;
+					}
+				},
+				// failure handler
+				function(response) {
+					alert('HTTP request failed (FullTextSearchREST/search): ' + response.status + ' - ' + response.statusText);
+				}
+			);
+		}
+	}]);
+})();
+]]></CSP>
+
+
+<CSP name="js/factories/search.js" application="/csp/user/" default="1"><![CDATA[
+/**
+ * 
+ */
+(function() {
+	angular.module('FullTextSearch').factory('FullTextSearchREST', [ '$http', function($http) {
+		var factory = {};
+		
+		// This is defined in the page
+		factory.baseUrl = window.restUrl;
+
+		factory.search = function(searchTerm, successHandler, failureHandler) {
+			$http({
+				method: 'GET',
+				url: factory.baseUrl + '/search/v1/' + searchTerm,
+			}).then(
+				function successCallback(response) {
+					if (typeof successHandler === 'function') {
+						successHandler.call(this, response);
+					}
+					else {
+						console.log('Unhandled HTTP response (FullTextSearchREST/search):');
+						console.log(response);
+					}
+				},
+				function failureCallback(response) {
+					if (typeof failureHandler === 'function') {
+						failureHandler.call(this, response);
+					}
+					else {
+						console.log('Unhandled HTTP error (FullTextSearchREST/search, ' + response.status + ', ' + response.statusText + '):');
+						console.log(response);
+					}
+				}					
+			);
+		}
+		
+		return factory;
+	}]);
+})();
+]]></CSP>
+</Export>

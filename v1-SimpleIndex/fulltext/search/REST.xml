@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2.1 (Build 803U)" ts="2017-02-14 11:00:32">
+<Class name="fulltext.search.REST">
+<Description><![CDATA[
+REST interface for the <var>fulltextSearch.csp</var> web-application, which is insatlled with this project.]]></Description>
+<CompileAfter>fulltext.search.v1.Data</CompileAfter>
+<Super>%CSP.REST</Super>
+<TimeChanged>64328,39620.149807</TimeChanged>
+<TimeCreated>64324,52572.87035</TimeCreated>
+
+<Parameter name="CHARSET">
+<Default>UTF-8</Default>
+</Parameter>
+
+<Parameter name="CONTENTTYPE">
+<Default>application/json</Default>
+</Parameter>
+
+<Parameter name="CONVERTINPUTSTREAM">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="LOCATION">
+<Default>/fulltext</Default>
+</Parameter>
+
+<XData name="UrlMap">
+<XMLNamespace>http://www.intersystems.com/urlmap</XMLNamespace>
+<Data><![CDATA[
+<Routes>
+<Route Url="/search/v1/:term" Method="GET" Call="SearchV1" Cors="true"/>
+</Routes>
+]]></Data>
+</XData>
+
+<Method name="SearchV1">
+<Description><![CDATA[
+Performs "fulltext" search on the <class>fulltext.search.v1.Data</class> <var>Description</var> field using its 
+ custom, functional index. Plus a normal search on the traditional index of the <var>Company</var> field.
+And returns the top 20 results (in undefined order) in the following JSON structure:
+<example language="JSON">
+{ ellapsedTime: "ellapsed time in ms", results: [ ... ] }
+</example>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pTerm:%String=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Set t1 = $ZTS
+	Set resultSet = ##class(%DynamicObject).%New()
+	Set results = ##class(%DynamicArray).%New()
+	
+	TRY {
+		If $Length(pTerm) > 2 {
+			&sql(DECLARE fulltextRESTSearchV1 CURSOR FOR
+				SELECT TOP 20 ID, Company, Description
+				INTO :id, :comp, :desc
+				FROM fulltext_search_v1.Data
+				WHERE 
+					ID %INSET search_index(DescIdx, :pTerm) OR
+					Company %STARTSWITH :pTerm
+			)
+			If '$Get(SQLCODE, 0) { &sql(OPEN fulltextRESTSearchV1) }
+			If $Get(SQLCODE, 0) { 
+				Set tSC = $$$ERROR($$$SQLError, SQLCODE, $Get(%msg, "Fulltext search failed on fulltext_search_v1.Data!"))
+			}
+			
+			While $$$ISOK(tSC) {
+				&sql(FETCH fulltextRESTSearchV1) Quit:(SQLCODE)
+				
+				Set obj = ##class(%DynamicObject).%New()
+				Set obj.id = id
+				Set obj.company = comp
+				Set obj.description = desc
+				
+				Do results.%Push(obj)
+			}
+			If $$$ISOK(tSC) && $Get(SQLCODE,0) && (SQLCODE '= 100) {
+				Set tSC = $$$ERROR($$$SQLError, SQLCODE, $Get(%msg, "Fulltext search failed on fulltext_search_v1.Data!"))
+			}
+		}
+	}
+	CATCH ex {
+		Set tSC = ex.AsStatus()
+	}
+	&sql(CLOSE fulltextRESTSearchV1)
+	
+	If $$$ISOK(tSC) {
+		Set t2 = $ZTS
+		Set resultSet.ellapsedTime = $System.SQL.DATEDIFF("ms", t1, t2)
+		Set resultSet.results = results
+		Write resultSet.%ToJSON()
+	}
+	Else {
+		Set %response.Status = 500
+		Set err = ##class(%DynamicObject).%New()
+		Set err.errorCodes =  $System.Status.GetErrorCodes(tSC)
+		Set err.errorText =  $System.Status.GetErrorText(tSC)
+		Write err.%ToJSON()
+	}
+	
+	Quit tSC
+]]></Implementation>
+</Method>
+</Class>
+</Export>

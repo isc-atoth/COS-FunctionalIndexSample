@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2.1 (Build 803U)" ts="2017-02-14 09:36:23">
+<Class name="fulltext.search.v1.Result">
+<Description><![CDATA[
+Helper class for the <class>fulltext.search.v1.Index</class> functional index.
+<p>To support the proprietary SQL predicate: <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a> the only 
+ requirement is for this class is to have a <property>ContainsItem</property> instance method.</p>]]></Description>
+<Super>%SQL.AbstractFind</Super>
+<TimeChanged>64328,34534.052605</TimeChanged>
+<TimeCreated>64323,35254.718458</TimeCreated>
+
+<Property name="TargetClass">
+<Description><![CDATA[
+For internal use only: the classname, in which the corresponding functional index (<property>TargetIndex</property>) is defined.]]></Description>
+<Type>%String</Type>
+<Internal>1</Internal>
+</Property>
+
+<Property name="TargetIndex">
+<Description><![CDATA[
+For internal use only: the name of the corresponding functional index in the <property>TargetClass</property>.]]></Description>
+<Type>%String</Type>
+<Internal>1</Internal>
+</Property>
+
+<Property name="Params">
+<Description><![CDATA[
+For internal use only: additional parameters of the <property>TargetIndex</property> in <property>TargetClass</property>]]></Description>
+<Internal>1</Internal>
+<MultiDimensional>1</MultiDimensional>
+</Property>
+
+<Property name="IDList">
+<Description>
+Internal multidimensional array property to store the matching IDs for a specific search condition.</Description>
+<Internal>1</Internal>
+<MultiDimensional>1</MultiDimensional>
+<Private>1</Private>
+</Property>
+
+<Method name="ContainsItem">
+<Description><![CDATA[
+Mandatory interface method, which mkes it possible to use this class as the returning object of the
+<a href="%25CSP.Documatic.cls?PAGE=CLASS&CLASSNAME=%25Library.FunctionalIndex#Find">Find</a> method of the
+corresponding functional index (<class>fulltext.search.v1.Index</class>).]]></Description>
+<FormalSpec>pSearch:%String</FormalSpec>
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[	Quit $Data(..IDList(pSearch))
+]]></Implementation>
+</Method>
+
+<Method name="PrepareInSet">
+<Description><![CDATA[
+Internal method, which prepares the <property>IDList</property> array with matching IDs for a specific search condition.]]></Description>
+<Internal>1</Internal>
+<FormalSpec>pTerm:%Binary</FormalSpec>
+<Implementation><![CDATA[
+	Kill ..IDList
+	Set pTerm = $Translate($ZCVT(pTerm, "L"), $Get(..Params("NORMCHARSFROM")), $Get(..Params("NORMCHARSTO")))
+	Set tLen = $Length(pTerm)
+	
+	Set key = $Order(^FullTextSearch(..TargetClass, ..TargetIndex, pTerm), -1)
+	While 1 {
+		Set key = $Order(^FullTextSearch(..TargetClass, ..TargetIndex, key)) Quit:(key = "")
+		If $Extract(key, 1, tLen) = pTerm {
+			Merge ..IDList = ^FullTextSearch(..TargetClass, ..TargetIndex, key)
+		}
+		Else { Quit }
+	}
+]]></Implementation>
+</Method>
+
+<Method name="%OnNew">
+<FormalSpec><![CDATA[pClassName:%String,pIndexName:%String,&pParams:%Binary]]></FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set i%TargetClass = pClassName
+	Set i%TargetIndex = pIndexName
+	Merge i%Params = pParams
+	Quit $$$OK
+]]></Implementation>
+</Method>
+</Class>
+</Export>
