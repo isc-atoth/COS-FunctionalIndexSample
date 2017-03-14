@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2017.1 (Build 720U)" ts="2017-03-14 16:48:44">
+<Class name="fulltext.search.v2.Data">
+<Description><![CDATA[
+This sample class shows a free-text search feature, implemented based on the <class>%Library.FunctionalIndex</class> capability of Caché.
+The class has a <class>%Library.String</class> type property (<property>Description</property>) with a custom functional index defined on that field.
+<p>To test the index, first populate the data either by inserting new rows into the table on your favourite way (object or SQL),
+ or use the built-in, automatic data population option:</p>
+<example>Do ##class(fulltext.search.v2.Data).Populate(numberOfRecords)</example>
+<p>Then you can use the following SQL query:</p>
+<example language="sql">SELECT ID, Description FROM fulltext_search_v2.Data WHERE ID %FIND search_index(DescIdx, '<search-phrase>')</example>
+<p>The main differnce between this example and the one in <class>fulltext.search.v1.Data</class> is that the funtional index behind this class
+supports the necessary methods both to mimic a traditional and a bitmap-like index.</p>]]></Description>
+<Super>%Persistent,%Populate</Super>
+<TimeChanged>64356,42765.287665</TimeChanged>
+<TimeCreated>64314,82741.85335</TimeCreated>
+<DependsOn>fulltext.search.v2.Index</DependsOn>
+
+<Index name="CompIdx">
+<Properties>Company</Properties>
+</Index>
+
+<Index name="DescIdx">
+<Description><![CDATA[
+Custom index specification. For deatils: see the <class>fulltext.search.v2.Index</class> functional index class.]]></Description>
+<Properties>Description</Properties>
+<TypeClass>fulltext.search.v2.Index</TypeClass>
+</Index>
+
+<Property name="Company">
+<Description><![CDATA[
+Automatic population of the <property>Company</property> field is done by the 
+<a href="%25CSP.Documatic.cls?PAGE=CLASS&CLASSNAME=%25Library.PopulateUtils&MEMBER=Company" >Company</a> method
+in <class>%Library.PopulateUtils</class>.]]></Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+<Parameter name="POPSPEC" value="Company()"/>
+</Property>
+
+<Property name="Description">
+<Description><![CDATA[
+Automatic population of the <property>Description</property> field is done by the 
+<a href="%25CSP.Documatic.cls?PAGE=CLASS&CLASSNAME=%25Library.PopulateUtils&MEMBER=Mission" >Mission</a> method
+in <class>%Library.PopulateUtils</class>.]]></Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+<Parameter name="POPSPEC" value="Mission()"/>
+</Property>
+
+<Storage name="Default">
+<Type>%Library.CacheStorage</Type>
+<DataLocation>^fulltext.search.v2.DataD</DataLocation>
+<DefaultData>DataDefaultData</DefaultData>
+<IdLocation>^fulltext.search.v2.DataD</IdLocation>
+<IndexLocation>^fulltext.search.v2.DataI</IndexLocation>
+<StreamLocation>^fulltext.search.v2.DataS</StreamLocation>
+<ExtentSize>500000</ExtentSize>
+<Data name="DataDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>Company</Value>
+</Value>
+<Value name="3">
+<Value>Description</Value>
+</Value>
+</Data>
+<Property name="%%CLASSNAME">
+<Selectivity>0.0033%</Selectivity>
+<OutlierSelectivity>.99967:</OutlierSelectivity>
+<AverageFieldSize>1</AverageFieldSize>
+</Property>
+<Property name="%%ID">
+<Selectivity>1</Selectivity>
+<AverageFieldSize>5.77</AverageFieldSize>
+</Property>
+<Property name="Company">
+<Selectivity>0.0169%</Selectivity>
+<AverageFieldSize>17.38</AverageFieldSize>
+</Property>
+<Property name="Description">
+<Selectivity>0.0002%</Selectivity>
+<AverageFieldSize>93.14</AverageFieldSize>
+</Property>
+<SQLMap name="$Data">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="CompIdx">
+<BlockCount>-2228</BlockCount>
+</SQLMap>
+<SQLMap name="IDKEY">
+<BlockCount>-34164</BlockCount>
+</SQLMap>
+</Storage>
+</Class>
+</Export>

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2017.1 (Build 720U)" ts="2017-03-14 16:48:53">
+<Class name="fulltext.search.v2.Index">
+<Description><![CDATA[
+Functional index (see: <class>%Library.FunctionalIndex</class> for detailed explanation), which helps to perform
+free-text search, finding all the occurences of a 3-10 characters long search pattern in the indexed field.
+<p>Known restrictions of the prototype (some of may change in later versions):<ul>
+<li>The name of the index global is fixed (<var>^FullTextSearch</var>) and subscripted by the name of the class and index name.</li>
+<li>The usage is limited to one-element indices, with no data content, so the usage example must be just like this:
+ <example language="CLS!MEMBER">Index MyIndex On (MyProperty) As fulltext.search.v2.Index;</example>
+</li>
+</ul></p>
+
+<p>Unlike <class>fulltext.search.v1.Index</class>, this class supports both the <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a> 
+ and <a href="DocBook.UI.Page.cls?KEY=RSQL_find">%FIND</a> proprietary SQL predicates. The former performs a search, which is closer to
+ traditional indices, while <a href="DocBook.UI.Page.cls?KEY=RSQL_find">%FIND</a> to bitmap indices.</p>]]></Description>
+<ClassType>index</ClassType>
+<Super>%Library.FunctionalIndex</Super>
+<TimeChanged>64356,59362.502826</TimeChanged>
+<TimeCreated>64323,35189.76612</TimeCreated>
+<DependsOn>fulltext.search.v2.Result</DependsOn>
+
+<Parameter name="NORMCHARSFROM">
+<Description><![CDATA[
+These characters will be substituted before storing the indices. 
+The transformation to be done is: <br/><var><b>$Translate(</b><property>NORMCHARSFROM</property>, <property>NORMCHARSTO</property><b>)</b></var>]]></Description>
+<Type>%String</Type>
+<Default>áéíóöőúüű</Default>
+</Parameter>
+
+<Parameter name="NORMCHARSTO">
+<Description><![CDATA[
+These characters will be used as substitutions before storing the indices. 
+The transformation to be done is: <br/><var><b>$Translate(</b><property>NORMCHARSFROM</property>, <property>NORMCHARSTO</property><b>)</b></var>]]></Description>
+<Type>%String</Type>
+<Default>aeiooouuu</Default>
+</Parameter>
+
+<Method name="InsertIndex">
+<Description><![CDATA[
+This method is invoked when a new instance of a class is inserted into the database.
+<p>See <class>%Library.FunctionalIndex</class> for further details on the parameterization!</p>
+<p>This is identical to <class>fulltext.search.v1.Index</class>.</p>]]></Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>generator</CodeMode>
+<FormalSpec>pID:%CacheString,pArg...:%Binary</FormalSpec>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	If %mode = "method" { Quit $$$OK }
+	
+	$$$GENERATE($Char(9) _ "Set tSC = $$$OK")
+	$$$GENERATE($Char(9) _ "Do .." _ %property _ "GetIndexParams(.parms)")
+	$$$GENERATE($Char(9) _ "Set tSC = ##class(fulltext.search.v2.Index).StoreValue("""_ %class _ """, """ _ %property _ """, .parms, pID, 0, pArg(1))")
+	$$$GENERATE($Char(9) _ "Quit tSC")
+		
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="DeleteIndex">
+<Description><![CDATA[
+This method is invoked when an existing instance of a class is deleted.
+<p>See <class>%Library.FunctionalIndex</class> for further details on the parameterization!</p>
+<p>This is identical to <class>fulltext.search.v1.Index</class>.</p>]]></Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>generator</CodeMode>
+<FormalSpec>pID:%CacheString,pArg...:%Binary</FormalSpec>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	If %mode = "method" { Quit $$$OK }
+	
+	$$$GENERATE($Char(9) _ "Set tSC = $$$OK") 
+	$$$GENERATE($Char(9) _ "Do .." _ %property _ "GetIndexParams(.parms)")
+	$$$GENERATE($Char(9) _ "Set tSC = ##class(fulltext.search.v2.Index).StoreValue("""_ %class _ """, """ _ %property _ """, .parms, pID, 1, pArg(1))")
+	$$$GENERATE($Char(9) _ "Quit tSC")
+		
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="UpdateIndex">
+<Description><![CDATA[
+This method is invoked when an existing instance of a class is updated.
+<p>See <class>%Library.FunctionalIndex</class> for further details on the parameterization!</p>
+<p>This is identical to <class>fulltext.search.v1.Index</class>.</p>]]></Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>generator</CodeMode>
+<FormalSpec>pID:%CacheString,pArg...:%Binary</FormalSpec>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+
+	If %mode = "method" { Quit $$$OK }
+	ElseIf $$$defClassKeyGet(%class, $$$cCLASSnoextent) {
+		$$$GENERATE($Char(9) _ "Quit $$$OK")
+		Quit $$$OK
+	}
+	
+	$$$GENERATE($Char(9) _ "Set tSC = $$$OK") 
+	$$$GENERATE($Char(9) _ "Do .." _ %property _ "GetIndexParams(.parms)")
+	$$$GENERATE($Char(9) _ "Set tSC = ##class(fulltext.search.v2.Index).StoreValue("""_ %class _ """, """ _ %property _ """, .parms, pID, 1, pArg(2))")
+	$$$GENERATE($Char(9) _ "If $$$ISOK(tSC) {")
+	$$$GENERATE($Char(9,9) _ "Set tSC = ##class(fulltext.search.v2.Index).StoreValue("""_ %class _ """, """ _ %property _ """, .parms, pID, 0, pArg(1))")
+	$$$GENERATE($Char(9) _ "}")
+	$$$GENERATE($Char(9) _ "Quit tSC")
+		
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="PurgeIndex">
+<Description><![CDATA[
+This method is invoked when <a href="%25CSP.Documatic.cls?PAGE=CLASS&CLASSNAME=%25Library.Persistent#PurgeIndices" >%PurgeIndices</a>
+ of the indexed class is invoked.
+<p>This is identical to <class>fulltext.search.v1.Index</class>.</p>]]></Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>generator</CodeMode>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	
+	If %mode = "method" { Quit $$$OK }
+	ElseIf $$$defClassKeyGet(%class, $$$cCLASSnoextent) {
+		$$$GENERATE($Char(9) _ "Quit $$$OK")
+		Quit $$$OK
+	}
+
+	$$$GENERATE($Char(9) _ "Set tSC = $$$OK") 
+	$$$GENERATE($Char(9) _ "Kill ^FullTextSearch("""_ %class _ """, """ _ %property _ """)")
+	$$$GENERATE($Char(9) _ "Quit tSC")
+		
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="Find">
+<Description><![CDATA[
+This method is responsible for preparing the right response when a <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a>
+ or <a href="DocBook.UI.Page.cls?KEY=RSQL_find">%FIND</a> proprietary SQL predicate is used in an SQL sentence.
+<p>Unlike <class>fulltext.search.v1.Index</class>, this version supports both predicates.</p>]]></Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>generator</CodeMode>
+<FormalSpec>pSearch:%Binary</FormalSpec>
+<ReturnType>%Binary</ReturnType>
+<SqlProc>1</SqlProc>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+
+	If %mode = "method" { Quit $$$OK }
+	ElseIf $$$defClassKeyGet(%class, $$$cCLASSnoextent) {
+		$$$GENERATE($Char(9) _ "Quit """"")
+		Quit $$$OK
+	}
+	
+	$$$GENERATE($Char(9) _ "TRY {")
+	$$$GENERATE($Char(9,9) _ "Do .." _ %property _ "GetIndexParams(.parms)")
+	$$$GENERATE($Char(9,9) _ "Set result = ##class(fulltext.search.v2.Result).%New(""" _ %class _ """, """ _ %property _ """, .parms)")
+	$$$GENERATE($Char(9,9) _ "Do result.PrepareFind($Select($Length(pSearch) > 10: $Extract(pSearch, 1, 10), 1: pSearch))")
+	$$$GENERATE($Char(9) _ "} CATCH ex {")
+	$$$GENERATE($char(9,9) _ "Set %sqlcontext.%SQLCODE = ex.AsSQLCODE(), %sqlcontext.%Message = ex.AsSQLMessage()")
+	$$$GENERATE($char(9,9) _ "THROW ex")
+	$$$GENERATE($char(9) _ "}")
+	$$$GENERATE($Char(9) _ "Quit result")
+		
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="SortBeginIndex">
+<ClassMethod>1</ClassMethod>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="SortEndIndex">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pCommit:%Integer=1</FormalSpec>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="StoreValue">
+<Internal>1</Internal>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pClassName:%String,pIndexName:%String,&pParams:%Binary,pID:%CacheString,pDelete:%Boolean=0,pValue:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Set pValue = $Translate($ZConvert(pValue, "L"), $Get(pParams("NORMCHARSFROM")), $Get(pParams("NORMCHARSTO")))
+	
+	Set start = 1, next = ""
+	While $$$ISOK(tSC) {
+		Set start = $LOCATE(pValue, "[\w'-]+", start, , next) Quit:('start)
+		
+		Set nextM = $Translate(next, "'-")
+		For val = next, $Case(nextM, next: "", : nextM) {
+			If val '= "" {
+				// Bitmap indexes store the IDs- matching a specific index value- in chunks: bitstrings, which are usually 64000 bits long.
+				// Here the number of the chunk and the bit position within that chunk is calculated from the ID of the corresponding record.
+				// To use a bitmap-index, your base class MUST have an IdKey of positive integers.
+				Set chunk = (pID \ 64000) + 1
+				Set offset = (pID # 64000) + 1
+				// We have to read out the approriate chunk, modify it and write back: locking is required.
+				Lock +^FullTextSearch(pClassName, pIndexName, val, chunk):$$$LockTimeout
+				If ('$Test) { Set tSC = $$$ERROR($$$LockFailedToAcquireExclusive, "'" _ pClassName _ ":" _ pIndexName _ ":" _ pID _ "'") }
+				Else {
+					TRY {
+						Set bits = $Get(^FullTextSearch(pClassName, pIndexName, val, chunk))
+						Set $Bit(bits, offset) = $Select(pDelete: 0, 1: 1)
+						Set ^FullTextSearch(pClassName, pIndexName, val, chunk) = bits
+					}
+					CATCH ex {
+						Set tSC = ex.AsStatus()
+					}
+					Lock -^FullTextSearch(pClassName, pIndexName, val, chunk):$$$LockTimeout
+				}
+			}
+			Quit:$$$ISERR(tSC)
+		}
+		Set start = start + $Length(next)
+	}
+
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="GetIndexParams">
+<Description><![CDATA[
+<p>This is identical to <class>fulltext.search.v1.Index</class>.</p>]]></Description>
+<Internal>1</Internal>
+<ClassMethod>1</ClassMethod>
+<CodeMode>generator</CodeMode>
+<FormalSpec>*pParams:%Binary</FormalSpec>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	
+	If %mode = "method" { Quit $$$OK }
+	ElseIf $$$defClassKeyGet(%class, $$$cCLASSnoextent) {
+		$$$GENERATE($Char(9) _ "Quit """"")
+		Quit $$$OK
+	}
+
+	Set key = ""
+	$$$GENERATE($Char(9) _ "Kill pParams")
+	For {
+		Set key = $order(%parameter(key), 1, value) Quit:(key = "")
+		$$$GENERATE($Char(9) _ "Set pParams("_ $$$QUOTE(key) _ ") = " _ $$$QUOTE(value))
+	}
+
+	Quit tSC
+]]></Implementation>
+</Method>
+</Class>
+</Export>

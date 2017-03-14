@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2017.1 (Build 720U)" ts="2017-03-14 16:49:11">
+<Class name="fulltext.search.v2.Result">
+<Description><![CDATA[
+Helper class for the <class>fulltext.search.v2.Index</class> functional index.
+<p>As this version supports both the proprietary SQL predicates: <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a> 
+and <a href="DocBook.UI.Page.cls?KEY=RSQL_find">%FIND</a>, some more methods have to be implemented, compared to
+<class>fulltext.search.v1.Result</class>.</p>]]></Description>
+<Super>%SQL.AbstractFind</Super>
+<TimeChanged>64356,60357.987392</TimeChanged>
+<TimeCreated>64323,35254.718458</TimeCreated>
+
+<Property name="TargetClass">
+<Description><![CDATA[
+For internal use only: the classname, in which the corresponding functional index (<property>TargetIndex</property>) is defined.]]></Description>
+<Type>%String</Type>
+<Internal>1</Internal>
+</Property>
+
+<Property name="TargetIndex">
+<Description><![CDATA[
+For internal use only: the name of the corresponding functional index in the <property>TargetClass</property>.]]></Description>
+<Type>%String</Type>
+<Internal>1</Internal>
+</Property>
+
+<Property name="Params">
+<Description><![CDATA[
+For internal use only: additional parameters of the <property>TargetIndex</property> in <property>TargetClass</property>]]></Description>
+<Internal>1</Internal>
+<MultiDimensional>1</MultiDimensional>
+</Property>
+
+<Property name="Chunks">
+<Description>
+Internal multidimensional array property to store the matching bitmap chunks for a specific search condition.</Description>
+<Internal>1</Internal>
+<MultiDimensional>1</MultiDimensional>
+<Private>1</Private>
+</Property>
+
+<Method name="ContainsItem">
+<Description><![CDATA[
+Mandatory interface method, which makes it possible to use this class as the returning object of the
+<a href="%25CSP.Documatic.cls?PAGE=CLASS&CLASSNAME=%25Library.FunctionalIndex#Find">Find</a> method of the
+corresponding functional index (<class>fulltext.search.v2.Index</class>).]]></Description>
+<FormalSpec>pID:%String</FormalSpec>
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[
+	Set chunk = (pID \ 64000) + 1
+	Set offset = (pID # 64000) + 1
+	If $Data(..Chunks(chunk)) {
+		Quit $Bit(..Chunks(chunk), offset)
+	}
+	Else {
+		Quit 0
+	}
+]]></Implementation>
+</Method>
+
+<Method name="NextItem">
+<Description><![CDATA[
+This method is required to support traditional index behavior (for <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a>).
+<p>This mimics a <var>$Order</var>-like API, which is only required, when both <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a> and
+<a href="DocBook.UI.Page.cls?KEY=RSQL_find">%FIND</a> is supported by the same functional index.</p>
+<p>Practically: it returns the next ID, which matches the search condition.</p>]]></Description>
+<FormalSpec>pID:%String=""</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	Set chunk = (pID \ 64000) + 1
+	Set offset = (pID # 64000) + 1
+	
+	Set bits = ""
+	Set nextOffset = ""
+	Set chunk = chunk - 1
+	For {
+		Set chunk = $Order(..Chunks(chunk), 1, bits) Quit:(chunk = "")
+		Set nextOffset = $BitFind(bits, 1, offset + 1)
+		If nextOffset = "" {
+			Set offset = 0
+			Continue
+		}
+	}
+	
+	Quit $Case(nextOffset, "": "", : ((chunk - 1) * 64000) + nextOffset - 1)
+]]></Implementation>
+</Method>
+
+<Method name="NextItemInclusive">
+<Description><![CDATA[
+This method is required to support traditional index behavior (for <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a>).
+<p>This mimics a <var>$Order</var>-like API, which is only required, when both <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a> and
+<a href="DocBook.UI.Page.cls?KEY=RSQL_find">%FIND</a> is supported by the same functional index.</p>
+<p>Practically: it returns the next ID, which matches the search condition - or <var>pID</var> itself, if it matches the condition, too.</p>]]></Description>
+<FormalSpec>pID:%String=""</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	If ..ContainsItem(pID) {
+		Quit pID	
+	}
+	Quit ..NextItem(pID)
+]]></Implementation>
+</Method>
+
+<Method name="PreviousItem">
+<Description><![CDATA[
+This method is required to support traditional index behavior (for <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a>).
+<p>This mimics a <var>$Order</var>-like API, which is only required, when both <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a> and
+<a href="DocBook.UI.Page.cls?KEY=RSQL_find">%FIND</a> is supported by the same functional index.</p>
+<p>Practically: it returns the previous ID, which matches the search condition.</p>]]></Description>
+<FormalSpec>pID:%String=""</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	Set chunk = (pID \ 64000) + 1
+	Set offset = (pID # 64000) + 1
+	
+	Set bits = ""
+	Set nextOffset = ""
+	Set chunk = chunk + 1
+	For {
+		Set chunk = $Order(..Chunks(chunk), -1, bits) Quit:(chunk = "")
+		Set nextOffset = $BitFind(bits, -1, offset - 1)
+		If nextOffset = "" {
+			Set offset = 64001
+			Continue
+		}
+	}
+	
+	Quit $Case(nextOffset, "": "", : ((chunk - 1) * 64000) + nextOffset - 1)
+]]></Implementation>
+</Method>
+
+<Method name="PreviousItemInclusive">
+<Description><![CDATA[
+This method is required to support traditional index behavior (for <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a>).
+<p>This mimics a <var>$Order</var>-like API, which is only required, when both <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%INSET</a> and
+<a href="DocBook.UI.Page.cls?KEY=RSQL_find">%FIND</a> is supported by the same functional index.</p>
+<p>Practically: it returns the previous ID, which matches the search condition - or <var>pID</var> itself, if it matches the condition, too.</p>]]></Description>
+<FormalSpec>pID:%String=""</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	If ..ContainsItem(pID) {
+		Quit pID
+	}
+	Quit ..PreviousItem(pID)
+]]></Implementation>
+</Method>
+
+<Method name="GetChunk">
+<Description><![CDATA[
+This method is required to support bitmap index behavior (for <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%FIND</a>).
+<p>Practically: it returns the bitmap chunk, identified by <var>pChunk</var>.</p>]]></Description>
+<FormalSpec>pChunk:%Integer</FormalSpec>
+<ReturnType>%Binary</ReturnType>
+<Implementation><![CDATA[	Quit $Get(..Chunks(pChunk))
+]]></Implementation>
+</Method>
+
+<Method name="NextChunk">
+<Description><![CDATA[
+This method is required to support bitmap index behavior (for <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%FIND</a>).
+<p>Practically: it returns the next bitmap chunk, after the one, identified by <var>pChunk</var>.</p>]]></Description>
+<FormalSpec><![CDATA[&pChunk:%Integer=""]]></FormalSpec>
+<ReturnType>%Binary</ReturnType>
+<Implementation><![CDATA[
+	Set bits = ""
+	Set pChunk = $Order(..Chunks(pChunk), 1, bits)
+	Quit bits
+]]></Implementation>
+</Method>
+
+<Method name="PreviousChunk">
+<Description><![CDATA[
+This method is required to support bitmap index behavior (for <a href="DocBook.UI.Page.cls?KEY=RSQL_inset">%FIND</a>).
+<p>Practically: it returns the previous bitmap chunk, before the one, identified by <var>pChunk</var>.</p>]]></Description>
+<FormalSpec><![CDATA[&pChunk:%Integer=""]]></FormalSpec>
+<ReturnType>%Binary</ReturnType>
+<Implementation><![CDATA[
+	Set bits = ""
+	Set pChunk = $Order(..Chunks(pChunk), -1, bits)
+	Quit bits
+]]></Implementation>
+</Method>
+
+<Method name="PrepareFind">
+<Description><![CDATA[
+Internal method, which prepares the <property>IDList</property> array with matching IDs for a specific search condition.]]></Description>
+<Internal>1</Internal>
+<FormalSpec>pTerm:%Binary</FormalSpec>
+<Implementation><![CDATA[
+	Kill ..Chunks
+	Set pTerm = $Translate($ZCVT(pTerm, "L"), $Get(..Params("NORMCHARSFROM")), $Get(..Params("NORMCHARSTO")))
+	Set tLen = $Length(pTerm)
+	
+	Set key = $Order(^FullTextSearch(..TargetClass, ..TargetIndex, pTerm), -1)
+	While 1 {
+		Set key = $Order(^FullTextSearch(..TargetClass, ..TargetIndex, key)) Quit:(key = "")
+		If $Extract(key, 1, tLen) = pTerm {
+			If '$Data(..Chunks) {
+				Merge ..Chunks = ^FullTextSearch(..TargetClass, ..TargetIndex, key)
+			}
+			Else {
+				Set bits = "", chunk = ""
+				For {
+					Set chunk = $Order(^FullTextSearch(..TargetClass, ..TargetIndex, key, chunk), 1, bits) Quit:(chunk = "")
+					If '$Data(..Chunks(chunk)) {
+						Set ..Chunks(chunk) = bits
+					}
+					Else {
+						Set ..Chunks(chunk) = $BitLogic(..Chunks(chunk)|bits)
+					}
+				}
+			}
+			
+		}
+		Else { Quit }
+	}
+]]></Implementation>
+</Method>
+
+<Method name="%OnNew">
+<FormalSpec><![CDATA[pClassName:%String,pIndexName:%String,&pParams:%Binary]]></FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set i%TargetClass = pClassName
+	Set i%TargetIndex = pIndexName
+	Merge i%Params = pParams
+	Quit $$$OK
+]]></Implementation>
+</Method>
+</Class>
+</Export>
