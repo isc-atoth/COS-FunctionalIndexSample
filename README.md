@@ -31,4 +31,4 @@ The sample UI uses some external JavaScript libraries from the Internet. So eith
 
 ### Version history
 - 1.0: Initial version - Simple functional index, supporting [%INSET](http://docs.intersystems.com/latest/csp/docbook/DocBook.UI.Page.cls?KEY=RSQL_inset) only.
-- 2.0: 2nd sample - Bitmap-like functional index, supporting [%FIND](http://docs.intersystems.com/latest/csp/docbook/DocBook.UI.Page.cls?KEY=RSQL_find) only.
+- 2.0: 2nd sample - Bitmap-like functional index, supporting both [%INSET](http://docs.intersystems.com/latest/csp/docbook/DocBook.UI.Page.cls?KEY=RSQL_inset) and [%FIND](http://docs.intersystems.com/latest/csp/docbook/DocBook.UI.Page.cls?KEY=RSQL_find).
